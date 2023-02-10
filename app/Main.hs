@@ -11,15 +11,14 @@ main = do
     
 mainLoop :: WordBank -> IO ()
 mainLoop bank = do 
-        putStrLn "\nType in a word ('quit' to quit): "
-        word <- getLine 
-        loopIfNotQuit word (\x -> do
-            let lowercase = map toLower x
-            let similarWords = findSimilarWords lowercase bank
-            putStrLn $ case similarWords of 
-                Correct -> "Spelled correclty"
-                NoMatches -> "Way off" 
-                Matches matched -> "Maybe you meant one of these: " ++ show matched
+        putStrLn "\nType something ('quit' to quit): "
+        line <- getLine 
+        loopIfNotQuit line (\x -> do
+            let lowercaseWords = words $ map toLower x
+            let similarities = map (findSimilarWords bank dameLevenDist) lowercaseWords
+
+            let correctedWords = zipWith (curry correctWords) similarities lowercaseWords 
+            putStrLn $ "\nCorrected text: " ++ unwords correctedWords
             )
     where
         loopIfNotQuit :: String -> (String -> IO ()) -> IO ()
@@ -27,4 +26,7 @@ mainLoop bank = do
         loopIfNotQuit z f = do 
             f z
             mainLoop bank
-
+        
+        correctWords :: (SimilarityResult, String) -> String
+        correctWords (Matches matched, _) = head matched 
+        correctWords (_, word) = word

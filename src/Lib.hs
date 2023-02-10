@@ -3,8 +3,12 @@ module Lib
         WordBank (..),
         loadWordBank,
         findSimilarWords,
-        SimilarityResult (Correct, Matches, NoMatches)
+        SimilarityResult (Correct, Matches, NoMatches),
+        levenDist,
+        dameLevenDist
     ) where
+import Data.Char (toLower)
+import Data.Array((!), listArray, range)
 
 data WordDist = WordDist String Int deriving (Show, Eq)
 
@@ -23,18 +27,19 @@ newtype WordBank = WordBank [String]
 loadWordBank :: String -> IO WordBank
 loadWordBank path = do
     file <- readFile path
-    return (WordBank (lines file))
+    let lowercaseWords = map (map toLower) $ lines file
+    return (WordBank lowercaseWords)
 
 data SimilarityResult = 
     NoMatches
     | Matches [String]
     | Correct
 
-findSimilarWords :: String -> WordBank -> SimilarityResult
-findSimilarWords word (WordBank bank) 
+findSimilarWords :: WordBank -> (String -> String -> Int) -> String -> SimilarityResult
+findSimilarWords (WordBank bank) distF word 
     | word `elem` bank = Correct
     | otherwise =  do  
-        let similarities = map (\x -> WordDist x (levenDist word x)) bank
+        let similarities = map (\x -> WordDist x (distF word x)) bank
         let min_dist = getWordSimilarity $ minimum similarities
         -- Dont match if the min difference is too large
         if min_dist > 3 then NoMatches
@@ -48,6 +53,24 @@ levenDist a b
     | otherwise = do
         let tab = levenDist (tail a) b
         let atb = levenDist a (tail b)
-        let tatab = levenDist (tail a) (tail b)
+        let tatb = levenDist (tail a) (tail b)
 
-        1 + min tab (min atb tatab)
+        1 + min tab (min atb tatb)
+
+dameLevenDist :: String -> String -> Int
+dameLevenDist a b = ms ! (length a, length b)
+    where
+        m i 0 = i
+        m 0 j = j
+        m i j
+            | a !! (i - 1) == b !! (j -1) = ms ! (i - 1, j -1)
+            | otherwise = 1 + minimum [
+                                    ms ! (i - 1, j),
+                                    ms ! (i, j - 1),
+                                    ms ! (i - 1, j - 1)
+                                    ]
+
+
+        bounds = ((0, 0), (length a, length b))
+        ms = listArray bounds
+            [m i j | (i, j) <- range bounds]
