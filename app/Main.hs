@@ -1,7 +1,14 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import Lib
-import Data.Char (toLower)
+import qualified Data.Text as T
+
+import Text.Colour
+import qualified Data.Text.IO as T
+import Data.Text (Text)
+import GHC.TypeLits (ErrorMessage(Text))
 
 main :: IO ()
 main = do 
@@ -12,21 +19,21 @@ main = do
 mainLoop :: WordBank -> IO ()
 mainLoop bank = do 
         putStrLn "\nType something ('quit' to quit): "
-        line <- getLine 
+        line <- T.getLine 
         loopIfNotQuit line (\x -> do
-            let lowercaseWords = words $ map toLower x
-            let similarities = map (findSimilarWords bank dameLevenDist) lowercaseWords
+            let wordList = T.words x
+            let similarities = map (findSimilarWords bank dameLevenDist) wordList
 
-            let correctedWords = zipWith (curry correctWords) similarities lowercaseWords 
-            putStrLn $ "\nCorrected text: " ++ unwords correctedWords
+            let correctedWords = zipWith (curry correctWords) similarities wordList 
+            T.putStrLn $ T.pack "\nCorrected text: " `T.append` T.unwords correctedWords
             )
     where
-        loopIfNotQuit :: String -> (String -> IO ()) -> IO ()
-        loopIfNotQuit "quit" _ = putStrLn "Quitting"
+        loopIfNotQuit :: Text -> (Text -> IO ()) -> IO ()
+        loopIfNotQuit "quit" _ = T.putStrLn $ T.pack "Quitting"
         loopIfNotQuit z f = do 
             f z
             mainLoop bank
         
-        correctWords :: (SimilarityResult, String) -> String
-        correctWords (Matches matched, _) = head matched 
+        correctWords :: (SimilarityResult, Text) -> Text
+        correctWords (Matches matched, _) = renderChunkText With24BitColours $ fore green $ chunk $ head matched 
         correctWords (_, word) = word
