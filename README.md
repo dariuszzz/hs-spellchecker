@@ -3,4 +3,6 @@ using Optimal string alignment distance from https://en.wikipedia.org/wiki/Damer
 
 first "project" in haskell
 
+requires a list of correct words sperated into lines named words.txt
+
 ![](example.png)
