@@ -8,7 +8,6 @@ import qualified Data.Text as T
 import Text.Colour
 import qualified Data.Text.IO as T
 import Data.Text (Text)
-import GHC.TypeLits (ErrorMessage(Text))
 
 main :: IO ()
 main = do 
@@ -35,5 +34,6 @@ mainLoop bank = do
             mainLoop bank
         
         correctWords :: (SimilarityResult, Text) -> Text
-        correctWords (Matches matched, _) = renderChunkText With24BitColours $ fore green $ chunk $ head matched 
+        correctWords (Matches matched, _) = 
+            renderChunkText With24BitColours $ fore green $ chunk $ head matched 
         correctWords (_, word) = word

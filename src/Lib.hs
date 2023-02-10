@@ -4,7 +4,7 @@ module Lib
         loadWordBank,
         findSimilarWords,
         SimilarityResult (Correct, Matches, NoMatches),
-        levenDist,
+        -- levenDist,
         dameLevenDist
     ) where
 import Data.Array((!), listArray, range)
@@ -49,17 +49,19 @@ findSimilarWords (WordBank bank) distF word
         if min_dist > 3 then NoMatches
         else Matches (map getWordStr $ filter (\x -> min_dist == getWordSimilarity x) similarities)
 
-levenDist :: Text -> Text -> Int
-levenDist a b
-    | T.null b = T.length a
-    | T.null a = T.length b
-    | T.head a == T.head b = levenDist (T.tail a) (T.tail b)
-    | otherwise = do
-        let tab = levenDist (T.tail a) b
-        let atb = levenDist a (T.tail b)
-        let tatb = levenDist (T.tail a) (T.tail b)
+-- alternative distance algorithm
 
-        1 + min tab (min atb tatb)
+-- levenDist :: Text -> Text -> Int
+-- levenDist a b
+--     | T.null b = T.length a
+--     | T.null a = T.length b
+--     | T.head a == T.head b = levenDist (T.tail a) (T.tail b)
+--     | otherwise = do
+--         let tab = levenDist (T.tail a) b
+--         let atb = levenDist a (T.tail b)
+--         let tatb = levenDist (T.tail a) (T.tail b)
+
+--         1 + min tab (min atb tatb)
 
 dameLevenDist :: Text -> Text -> Int
 dameLevenDist a b = ms ! (T.length a, T.length b)
